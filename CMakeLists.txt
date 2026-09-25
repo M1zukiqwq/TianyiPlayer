@@ -58,6 +58,29 @@ if(WIN32)
             $<TARGET_FILE_DIR:tianyi_player>
         COMMENT "Copy runtime libraries next to TianyiPlayer"
     )
+
+    # Pull in the MinGW/MSYS2 runtime the app links against (FFmpeg, spdlog,
+    # SDL3_image/ttf, libgcc/libstdc++). Names are version-suffixed, so glob.
+    get_filename_component(SEMI_TOOLCHAIN_BIN "${CMAKE_CXX_COMPILER}" DIRECTORY)
+    set(TIANYI_RUNTIME_PATTERNS
+        "avcodec-*.dll" "avformat-*.dll" "avutil-*.dll"
+        "swresample-*.dll" "swscale-*.dll"
+        "SDL3_image.dll" "SDL3_ttf.dll"
+        "libspdlog-*.dll" "libgcc_s_seh-*.dll" "libstdc++-*.dll" "libwinpthread-*.dll"
+    )
+    set(TIANYI_RUNTIME_DLLS "")
+    foreach(pattern IN LISTS TIANYI_RUNTIME_PATTERNS)
+        file(GLOB matched "${SEMI_TOOLCHAIN_BIN}/${pattern}")
+        list(APPEND TIANYI_RUNTIME_DLLS ${matched})
+    endforeach()
+    if(TIANYI_RUNTIME_DLLS)
+        add_custom_command(TARGET tianyi_player POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                ${TIANYI_RUNTIME_DLLS}
+                $<TARGET_FILE_DIR:tianyi_player>
+            COMMENT "Copy MinGW/MSYS2 runtime DLLs next to TianyiPlayer"
+        )
+    endif()
 endif()
 
 add_custom_command(TARGET tianyi_player POST_BUILD

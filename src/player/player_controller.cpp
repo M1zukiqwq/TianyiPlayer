@@ -28,6 +28,9 @@ bool Controller::init() {
     }
     running_ = true;
     reaper_ = std::thread([this] { reap_loop(); });
+    // configure_video_output is only accepted while the session is Idle and the
+    // values are consumed by the *next* open, so set up the video output first.
+    post_configure();
     return true;
 }
 
@@ -266,11 +269,9 @@ void Controller::post_configure() {
     semi_video_output_config_t config{};
     config.struct_size = sizeof(config);
     config.pixel_format = SEMI_VIDEO_PIXEL_FORMAT_RGBA8888;
-    {
-        std::lock_guard<std::mutex> lock(state_mutex_);
-        config.output_width = media_.width > 0 ? static_cast<std::uint32_t>(media_.width) : 1280;
-        config.output_height = media_.height > 0 ? static_cast<std::uint32_t>(media_.height) : 720;
-    }
+    // The engine scales to this size; the UI fits the result into its window.
+    config.output_width = kOutputWidth;
+    config.output_height = kOutputHeight;
     config.on_frame = &Controller::video_frame_trampoline;
     config.user_data = this;
 
@@ -307,7 +308,10 @@ void Controller::reap_loop() {
         if (cmd.is_open) {
             if (rc == SEMI_OK && result.has_media_info) {
                 apply_open_result(result);
-                post_configure();
+                std::lock_guard<std::mutex> lock(state_mutex_);
+                if (status_ == Status::Opening) {
+                    status_ = Status::Ready;
+                }
             } else {
                 std::lock_guard<std::mutex> lock(state_mutex_);
                 status_ = Status::Error;
@@ -315,12 +319,7 @@ void Controller::reap_loop() {
                                               : ("open failed, status=" + std::to_string(rc));
             }
         } else if (cmd.is_configure) {
-            if (rc == SEMI_OK) {
-                std::lock_guard<std::mutex> lock(state_mutex_);
-                if (status_ == Status::Opening) {
-                    status_ = Status::Ready;
-                }
-            } else {
+            if (rc != SEMI_OK) {
                 std::lock_guard<std::mutex> lock(state_mutex_);
                 status_ = Status::Error;
                 error_text_ = "configure_video_output failed, status=" + std::to_string(rc);

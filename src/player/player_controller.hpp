@@ -49,6 +49,10 @@ enum class Status {
 
 class Controller {
 public:
+    // The engine renders to this size; the UI scales the result into its window.
+    static constexpr std::uint32_t kOutputWidth = 1920;
+    static constexpr std::uint32_t kOutputHeight = 1080;
+
     ~Controller();
 
     bool init();
@@ -108,7 +112,7 @@ private:
     std::string error_text_;
 
     // -- frame mailbox (engine thread -> UI thread) --
-    std::mutex frame_mutex_;
+    mutable std::mutex frame_mutex_;
     std::vector<std::uint8_t> frame_pixels_;
     int frame_width_ = 0;
     int frame_height_ = 0;

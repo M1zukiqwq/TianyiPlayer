@@ -125,7 +125,6 @@ int main(int argc, char *argv[]) {
         return 1;
     }
     TTF_Init();
-    const int img_flags = IMG_Init(IMG_INIT_PNG | IMG_INIT_JPG);
 
     SDL_Window *window = SDL_CreateWindow("TianyiPlayer · 洛天依主题播放器", 1280, 720,
                                           SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIGH_PIXEL_DENSITY);
@@ -147,8 +146,8 @@ int main(int argc, char *argv[]) {
         poster = SDL_CreateTextureFromSurface(renderer, surf);
         SDL_DestroySurface(surf);
     }
-    if (!(img_flags & IMG_INIT_JPG) && !background) {
-        SDL_Log("SDL_image JPEG support missing and background failed to load");
+    if (!background) {
+        SDL_Log("background failed to load");
     }
 
     ui::TextRenderer text;
@@ -395,7 +394,6 @@ int main(int argc, char *argv[]) {
     }
     text.shutdown();
     TTF_Quit();
-    IMG_Quit();
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     SDL_Quit();
