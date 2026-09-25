@@ -1,0 +1,3 @@
+[submodule "third_party/semi_player"]
+	path = third_party/semi_player
+	url = https://github.com/Semiruyi/SemiPlayer.git
