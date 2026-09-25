@@ -4,6 +4,9 @@ build-*/
 out/
 cmake-build-*/
 
+# packaged distribution (build artifacts, not source)
+dist/
+
 # tooling
 .vs/
 .vscode/

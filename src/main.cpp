@@ -109,6 +109,10 @@ void draw_pause_icon(SDL_Renderer *renderer, SDL_FRect button, SDL_Color color) 
 } // namespace
 
 int main(int argc, char *argv[]) {
+    // stderr is fully buffered when redirected to a file; make diagnostics
+    // land immediately so crash/error forensics is reliable.
+    std::setvbuf(stderr, nullptr, _IONBF, 0);
+
     // Assets resolve relative to the executable first, then the CWD.
     std::filesystem::path exe_dir =
         argc > 0 ? std::filesystem::path(argv[0]).parent_path() : std::filesystem::path{};
